@@ -1,0 +1,737 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>GreenTrust AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: sidebar de navigation + colonne principale (barre haute collante, vues interchangeables, panneau de décision latéral dans le dossier). */
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --surface2:#E9EFEB; --paper:#FBFBF7; --line:#D6DFD9; --line2:#C3CFC8;
+  --fg:#13221B; --muted:#58695F; --accent:#0B6B4F; --accent-ink:#FFFFFF; --accent-soft:#DCEFE6;
+  --good:#17784A; --good-soft:#DDF2E6; --warn:#8F5A0B; --warn-soft:#FBEBCB; --bad:#B3261E; --bad-soft:#FBE1DE;
+  --info:#1F5FA8; --info-soft:#DDE9F7; --mute:#58695F; --mute-soft:#E4EAE6; --mark:#FFF0B8;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace; --serif:'IBM Plex Serif',Georgia,serif;
+  --shadow:0 1px 2px rgba(19,34,27,.06),0 4px 14px rgba(19,34,27,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1411; --surface:#121D18; --surface2:#1A2822; --paper:#17231E; --line:#25362E; --line2:#32463C;
+  --fg:#E5EEE9; --muted:#8EA498; --accent:#3FBF8F; --accent-ink:#06150F; --accent-soft:#12352A;
+  --good:#4FD39A; --good-soft:#123628; --warn:#E9B24D; --warn-soft:#3A2C10; --bad:#FF8A80; --bad-soft:#3F1A18;
+  --info:#7FB2F0; --info-soft:#14263D; --mute:#8EA498; --mute-soft:#1D2C25; --mark:#4A3F12; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1411; --surface:#121D18; --surface2:#1A2822; --paper:#17231E; --line:#25362E; --line2:#32463C;
+  --fg:#E5EEE9; --muted:#8EA498; --accent:#3FBF8F; --accent-ink:#06150F; --accent-soft:#12352A;
+  --good:#4FD39A; --good-soft:#123628; --warn:#E9B24D; --warn-soft:#3A2C10; --bad:#FF8A80; --bad-soft:#3F1A18;
+  --info:#7FB2F0; --info-soft:#14263D; --mute:#8EA498; --mute-soft:#1D2C25; --mark:#4A3F12; --shadow:none; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+h1,h2,h3,h4,p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--fg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);gap:16px;max-width:1520px;margin:0 auto;align-items:start}
+
+/* sidebar */
+.side{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 12px;max-height:calc(100vh - 32px);overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
+.brand svg{flex:none}
+.brand b{display:block;font-size:16px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand span{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;gap:10px;align-items:center;background:none;border:0;padding:9px 10px;border-radius:8px;text-align:left;color:var(--muted);font-weight:500}
+.nav button:hover{background:var(--surface2);color:var(--fg)}
+.nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.nav .cnt{margin-left:auto;font:500 11px var(--mono);background:var(--surface2);color:var(--muted);padding:1px 7px;border-radius:99px}
+.nav button[aria-current="page"] .cnt{background:var(--accent);color:var(--accent-ink)}
+.sidefoot{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px;font-size:12px;color:var(--muted)}
+.conn{display:flex;gap:8px;align-items:flex-start}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none;margin-top:5px}
+.dot.run{background:var(--info);animation:pulse 1.4s infinite}
+.dot.ok{background:var(--good)}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;gap:12px;align-items:center;background:var(--bg);padding:2px 0 12px}
+.search{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:0 12px;height:40px;max-width:520px}
+.search input{border:0;background:none;outline:0;flex:1;min-width:0;height:100%}
+.search:focus-within{border-color:var(--accent)}
+.tag{font-size:11px;font-weight:500;letter-spacing:.03em;border:1px dashed var(--line2);color:var(--muted);padding:3px 9px;border-radius:99px;white-space:nowrap}
+.iconbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.iconbtn:hover{color:var(--fg);border-color:var(--line2)}
+.me{display:flex;gap:10px;align-items:center;padding-left:4px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:600;font-size:13px}
+.me small{display:block;color:var(--muted);font-size:12px;line-height:1.2}
+.me b{font-weight:600;line-height:1.2}
+.spacer{flex:1}
+
+/* page */
+.page{display:flex;flex-direction:column;gap:16px}
+.phead{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.phead h1{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.phead p{color:var(--muted);margin-top:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.card h3{font-size:14px;font-weight:600;letter-spacing:0}
+.card .sub{color:var(--muted);font-size:12px}
+.chead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g21{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.kpi .lab{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.02em}
+.kpi .val{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:14px;color:var(--muted);font-weight:500;margin-left:3px}
+.kpi .ft{font-size:12px;color:var(--muted)}
+.up{color:var(--good);font-weight:500}.dn{color:var(--bad);font-weight:500}
+
+/* chips, buttons */
+.good{--c:var(--good);--cs:var(--good-soft)}.warn{--c:var(--warn);--cs:var(--warn-soft)}.bad{--c:var(--bad);--cs:var(--bad-soft)}.info{--c:var(--info);--cs:var(--info-soft)}.mute{--c:var(--mute);--cs:var(--mute-soft)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:500;background:var(--cs);color:var(--c);white-space:nowrap}
+.chip i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.run i{animation:pulse 1.2s infinite}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{height:30px;padding:0 10px;font-size:13px}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.seg{display:inline-flex;background:var(--surface2);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+/* bars + ring */
+.bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c,var(--accent));border-radius:3px;transition:width .5s}
+.pill{display:inline-flex;align-items:center;gap:8px;min-width:96px}
+.pill b{font:600 14px var(--mono);min-width:26px}
+.pill .bar{flex:1;min-width:44px}
+.ring{position:relative;width:148px;height:148px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .t{stroke:var(--surface2)}
+.ring .p{stroke:var(--c);transition:stroke-dasharray .6s}
+.ring .c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .c b{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.ring .c span{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
+
+/* tables */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr[data-go]{cursor:pointer}
+tbody tr[data-go]:hover td{background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+.co b{display:block;font-weight:600}
+.co span{font-size:12px;color:var(--muted)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.lbl{font-size:12px;font-weight:500;color:var(--muted)}
+.in{height:38px;border:1px solid var(--line2);background:var(--surface);border-radius:9px;padding:0 11px;min-width:0;width:100%}
+textarea.in{height:auto;padding:9px 11px;resize:vertical;min-height:84px}
+.in:focus{border-color:var(--accent);outline:0}
+
+/* lists */
+.list{display:flex;flex-direction:column;list-style:none;margin:0;padding:0}
+.li{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0;padding-bottom:0}.li:first-child{padding-top:0}
+.li .grow{flex:1;min-width:0}
+.li small{color:var(--muted);display:block}
+.feed .li{align-items:flex-start;font-size:13px}
+.feed .t{font:11px var(--mono);color:var(--muted);white-space:nowrap}
+.feed .new{animation:slide .5s}
+.dist{display:flex;flex-direction:column;gap:14px}
+.dist .row{display:grid;grid-template-columns:110px 1fr 36px;gap:12px;align-items:center}
+
+/* detail */
+.back{align-self:flex-start}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.dmain{display:flex;flex-direction:column;gap:16px;min-width:0}
+.aside{position:sticky;top:calc(64px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:16px}
+.hero{display:flex;gap:26px;align-items:center;flex-wrap:wrap}
+.hero .dims{flex:1;min-width:240px;display:flex;flex-direction:column;gap:12px}
+.dim{display:grid;grid-template-columns:150px 1fr 34px;gap:12px;align-items:center;font-size:13px}
+.dim small{color:var(--muted);font-family:var(--mono);font-size:11px;margin-left:4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font-weight:500;color:var(--muted);white-space:nowrap;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent)}
+.tabs .n{font:500 11px var(--mono);background:var(--bad-soft);color:var(--bad);padding:1px 6px;border-radius:99px;margin-left:6px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stat{background:var(--surface2);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-weight:600;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+.rec{display:flex;gap:12px;align-items:flex-start;background:var(--cs);color:var(--fg);border-radius:10px;padding:12px 14px;margin-top:18px;border:1px solid var(--c)}
+.rec svg{color:var(--c);flex:none;margin-top:2px}
+.proofs{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:16px;align-items:start}
+.clist{display:flex;flex-direction:column;gap:8px}
+.citem{display:flex;flex-direction:column;gap:6px;text-align:left;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.citem:hover{border-color:var(--line2)}
+.citem[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.citem .r{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.citem p{font-size:13px;line-height:1.4}
+.pl{font:500 11px var(--mono);background:var(--surface2);color:var(--muted);padding:1px 6px;border-radius:5px}
+.ev{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
+.ev header{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:9px 12px;background:var(--surface2);font-size:12px}
+.ev header b{font-weight:600;font-size:13px}
+.paper{background:var(--paper);padding:16px 18px;font:15px/1.65 var(--serif)}
+.paper mark{background:var(--cs);color:var(--fg);border-bottom:2px solid var(--c);padding:0 2px;border-radius:2px}
+.ev footer{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:9px 12px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+.missing{padding:22px;text-align:center;color:var(--muted);background:var(--paper);border:1px dashed var(--line2);border-radius:10px;margin-top:12px}
+.why{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-top:12px}
+.why b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px;font-weight:500}
+.fb{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.wf{display:flex;flex-direction:column;gap:4px}
+.wfr{display:grid;grid-template-columns:minmax(120px,1fr) minmax(160px,1.4fr) 52px;gap:12px;align-items:center;font-size:13px;padding:6px 0}
+.wfr .nm{min-width:0}
+.wfr .nm small{display:block;color:var(--muted);font-size:11px}
+.dv{position:relative;height:18px;background:var(--surface2);border-radius:4px}
+.dv::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line2)}
+.dv i{position:absolute;top:2px;bottom:2px;background:var(--c);border-radius:3px;transition:all .4s}
+.wfr .v{font:500 13px var(--mono);text-align:right}
+.wfr.tot{border-top:1px solid var(--line2);margin-top:6px;padding-top:12px;font-weight:600}
+.sim label{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.sim label:last-of-type{border-bottom:0}
+.sim input{margin-top:3px;accent-color:var(--accent)}
+.sim small{color:var(--muted);display:block}
+.simres{display:flex;align-items:center;gap:14px;background:var(--accent-soft);border-radius:10px;padding:12px 14px;margin-top:10px}
+.simres b{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.tl{position:relative;display:flex;flex-direction:column;gap:0;padding-left:22px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--line2)}
+.tle{position:relative;padding:0 0 16px}
+.tle::before{content:"";position:absolute;left:-22px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--info)}
+.tle.human::before{border-color:var(--accent);background:var(--accent)}
+.tle.bad::before{border-color:var(--bad)}
+.tle .hd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tle .hd b{font-weight:600}
+.tle .hd span{font:12px var(--mono);color:var(--muted)}
+.tle p{margin-top:2px}
+.tle .hs{font:11px var(--mono);color:var(--muted);margin-top:3px;word-break:break-all}
+.radio{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:13px}
+.radio:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.radio input{margin-top:3px;accent-color:var(--accent)}
+.radio .chip{margin-left:auto;font-size:11px;padding:1px 7px}
+.steps{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.steps span{display:inline-flex;gap:5px;align-items:center}
+.steps span::before{content:"";width:8px;height:8px;border-radius:50%;border:2px solid var(--line2)}
+.steps .d{color:var(--fg)}.steps .d::before{background:var(--good);border-color:var(--good)}
+.steps .a{color:var(--fg);font-weight:600}.steps .a::before{border-color:var(--accent)}
+.warnline{font-size:12px;color:var(--warn);background:var(--warn-soft);padding:7px 10px;border-radius:8px}
+.err{font-size:12px;color:var(--bad)}
+
+/* analysis + agents */
+.pipe{display:flex;flex-direction:column;gap:2px}
+.ps{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:12px 0}
+.ps .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line2);color:var(--muted);font:600 12px var(--mono);background:var(--surface)}
+.ps.run .ic{border-color:var(--info);color:var(--info);animation:pulse 1.2s infinite}
+.ps.done .ic{background:var(--good);border-color:var(--good);color:var(--accent-ink)}
+.ps b{display:block;font-weight:600}
+.ps small{color:var(--muted)}
+.ps .log{margin-top:6px;font:12px/1.6 var(--mono);color:var(--muted)}
+.ps .log div::before{content:"› ";color:var(--accent)}
+.files label{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.files label:last-child{border-bottom:0}
+.files input{accent-color:var(--accent)}
+.files small{margin-left:auto;font:12px var(--mono);color:var(--muted)}
+.drop{border:1.5px dashed var(--line2);border-radius:10px;padding:16px;text-align:center;color:var(--muted);margin-bottom:6px}
+.acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.acard .top2{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.acard .ai{width:36px;height:36px;border-radius:9px;background:var(--info-soft);color:var(--info);display:grid;place-items:center;flex:none}
+.acard dl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;margin:12px 0 0;font-size:13px}
+.acard dt{color:var(--muted)}.acard dd{margin:0;font:500 13px var(--mono);text-align:right}
+.flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.flow .node{background:var(--surface2);border-radius:9px;padding:8px 12px;font-weight:500;font-size:13px}
+.flow .node.h{background:var(--accent-soft);color:var(--accent)}
+.flow svg{color:var(--muted)}
+.prin{display:flex;flex-direction:column;gap:14px}
+.prin .row{display:grid;grid-template-columns:150px 1fr 44px;gap:12px;align-items:center;font-size:13px}
+.code{font:12px/1.6 var(--mono);background:var(--surface2);border-radius:8px;padding:2px 7px}
+.intg td:first-child{font-weight:600}
+.hashok{display:flex;align-items:center;gap:8px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:500;z-index:50;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.25);animation:slide .3s}
+@keyframes pulse{50%{opacity:.4}}
+@keyframes slide{from{opacity:0;transform:translate(var(--tx,0),8px)}}
+.toast{--tx:-50%}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+@media (max-width:1180px){.dgrid{grid-template-columns:minmax(0,1fr)}.aside{position:static}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g21{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;flex-direction:row;align-items:center;padding:10px;gap:10px;max-height:none;overflow-x:auto}
+  .brand span,.sidefoot{display:none}
+  .nav{flex-direction:row}
+  .nav button{white-space:nowrap}
+  .tag,.me>div:last-child{display:none}
+  .proofs{grid-template-columns:minmax(0,1fr)}
+  .g2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .g4{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dim{grid-template-columns:110px 1fr 30px}
+  .wfr{grid-template-columns:1fr 1fr 44px;gap:8px}
+  .prin .row{grid-template-columns:110px 1fr 40px}
+  .dist .row{grid-template-columns:90px 1fr 30px}
+  .phead h1{font-size:21px}
+}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5l11.5 4.2v8.6c0 7.4-4.8 11.7-11.5 14.2C9.3 27 4.5 22.700 4.500 15.300V6.700z" fill="var(--accent)"/><path d="M10.500 17.500c5.200-.8 8.600-4 10.600-8.500-.6 7.600-3 11.800-9.300 13.600-.2-2.200-.1-3.800.8-5.300z" fill="var(--accent-ink)"/></svg>
+      <div><b>GreenTrust AI</b><span>Audit ESG de confiance</span></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Navigation principale"></nav>
+    <div class="sidefoot">
+      <div class="conn"><i class="dot"></i><div><b style="color:var(--fg);font-weight:600">Salesforce non connecté</b><br>Mode prototype : données fictives locales.</div></div>
+    </div>
+  </aside>
+  <main>
+    <div class="top">
+      <label class="search" aria-label="Rechercher un dossier"><span id="ic-search"></span><input id="gsearch" type="search" placeholder="Rechercher une entreprise, un dossier GT-…" autocomplete="off"></label>
+      <span class="tag">Prototype · backend à connecter</span>
+      <span class="spacer"></span>
+      <button class="iconbtn" id="bell" aria-label="Notifications"></button>
+      <button class="iconbtn" id="theme" aria-label="Changer de thème"></button>
+      <div class="me"><div class="avatar">SB</div><div><b>Salma B.</b><small>Analyste ESG · Crédit entreprises</small></div></div>
+    </div>
+    <div id="view" class="page"></div>
+  </main>
+</div>
+<div id="toastbox"></div>
+
+<script>
+"use strict";
+/* ---------- utilitaires ---------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rng=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const hstr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16).padStart(8,"0")};
+const MOIS=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const NOW0=new Date("2026-11-17T21:22:00"), LOAD=Date.now();
+const now=()=>new Date(NOW0.getTime()+Date.now()-LOAD);
+const T=min=>new Date(NOW0.getTime()-min*60000);
+const pad=n=>String(n).padStart(2,"0");
+const fmt=d=>`${d.getDate()} ${MOIS[d.getMonth()]} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const rel=d=>{const m=Math.max(0,Math.round((now()-d)/60000));if(m<1)return"à l'instant";if(m<60)return`il y a ${m} min`;if(m<1440)return`il y a ${Math.round(m/60)} h`;return`il y a ${Math.round(m/1440)} j`};
+const IC={dash:"M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z",folder:"M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",spark:"M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.500 2.500M15.500 15.500L18 18M6 18l2.500-2.500M15.500 8.500L18 6",cpu:"M7 7h10v10H7zM9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4",list:"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",search:"M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.300-4.300",sun:"M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.500 1.500M17.500 17.500L19 19M5 19l1.500-1.500M17.500 6.500L19 5",moon:"M20 14.500A8 8 0 0 1 9.500 4 8 8 0 1 0 20 14.500z",check:"M5 12l4 4 10-10",alert:"M12 3l10 18H2zM12 10v5M12 18h.01",arrow:"M5 12h14M13 6l6 6-6 6",back:"M19 12H5M11 6l-6 6 6 6",shield:"M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z",bell:"M6 9a6 6 0 1 1 12 0c0 6 2 7 2 7H4s2-1 2-7zM10 20a2 2 0 0 0 4 0",file:"M6 3h8l5 5v13H6zM14 3v5h5",upload:"M12 16V4M7 9l5-5 5 5M4 20h16",eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",user:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"};
+const ic=(n,s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IC[n]}"/></svg>`;
+
+/* ---------- modèle de données (fictif) ---------- */
+const W=[.30,.30,.25,.15], DIMS=[["Fiabilité des preuves","30 %"],["Cohérence inter-documents","30 %"],["Traçabilité des sources","25 %"],["Couverture ESG","15 %"]];
+const weighted=s=>Math.round(s.reduce((a,v,i)=>a+v*W[i],0));
+const band=s=>s>=75?{k:"good",l:"Fiable"}:s>=55?{k:"warn",l:"À surveiller"}:{k:"bad",l:"Risque élevé"};
+const CONTRIB={confirmed:4,partial:-3,contradicted:-9,unsupported:-5};
+const CST={confirmed:["good","Confirmé"],partial:["warn","Partiel"],contradicted:["bad","Contradictoire"],unsupported:["bad","Non étayé"]};
+const PIL={E:"Environnement",S:"Social",G:"Gouvernance"};
+const STAT={"À valider":"info","En analyse":"info run","Validé":"good","Validé avec réserves":"warn","Compléments demandés":"warn","Rejeté":"bad","Escaladé":"bad"};
+const CHOICES=[["valid","Valider","Validé","good"],["reserves","Valider avec réserves","Validé avec réserves","warn"],["comp","Demander des compléments","Compléments demandés","warn"],["reject","Rejeter","Rejeté","bad"],["esc","Escalader au comité risques","Escaladé","bad"]];
+
+const POOL={
+good:[
+{p:"E",c:"Système de management environnemental certifié ISO 14001",s:"confirmed",cd:["Rapport ESG 2024",8],cx:["Le groupe dispose d'un système de management ","certifié ISO 14001 sur l'ensemble de ses sites"," depuis 2022."],pd:["Certificat ISO 14001",1],px:["Validité : ","du 12/03/2024 au 11/03/2027",". Périmètre : tous les sites de production."],conf:96,why:"Le certificat couvre la période et le périmètre déclarés dans le rapport."},
+{p:"G",c:"Code de conduite anti-corruption diffusé à l'ensemble des salariés",s:"confirmed",cd:["Rapport ESG 2024",31],cx:["Notre code de conduite a été ","diffusé à 100 % des collaborateurs"," et fait l'objet d'une attestation annuelle."],pd:["Registre des formations",2],px:["Taux de signature de l'attestation : ","99,4 % des effectifs",", soit 1 212 salariés sur 1 219."],conf:91,why:"Le taux observé (99,4 %) est cohérent avec l'affirmation arrondie (100 %)."},
+{p:"S",c:"Formation santé-sécurité : 24 heures par salarié",s:"confirmed",cd:["Rapport ESG 2024",22],cx:["La formation santé-sécurité représente ","24 heures par salarié"," en moyenne sur l'exercice."],pd:["Registre des formations",5],px:["Heures de formation SST rapportées à l'effectif moyen : ","23,6 h par salarié","."],conf:93,why:"Écart de 1,7 % : dans la tolérance d'arrondi."},
+{p:"E",c:"Consommation d'eau réduite de 21 % depuis 2022",s:"confirmed",cd:["Rapport ESG 2024",16],cx:["Nos prélèvements d'eau ont été ","réduits de 21 % depuis 2022"," grâce à la modernisation des circuits."],pd:["Audit eau 2024",9],px:["Variation des volumes prélevés 2022–2024 : ","−20,8 %",", mesurée par compteurs télé-relevés."],conf:94,why:"Mesure indépendante cohérente avec l'affirmation."},
+{p:"G",c:"Rapport de durabilité vérifié par un tiers indépendant",s:"confirmed",cd:["Rapport ESG 2024",3],cx:["Le présent rapport a fait l'objet d'","une vérification externe limitée","."],pd:["Lettre d'assurance",1],px:["Assurance limitée émise par un cabinet indépendant sur ","les indicateurs publiés en 2024","."],conf:89,why:"La lettre d'assurance existe, elle est datée et signée."},
+{p:"S",c:"Part des femmes dans l'encadrement : 34 %",s:"confirmed",cd:["Rapport ESG 2024",25],cx:["Les femmes représentent ","34 % de l'encadrement"," contre 29 % en 2022."],pd:["Registre du personnel",4],px:["Cadres et agents de maîtrise, femmes : ","33,7 %"," (213 sur 632)."],conf:92,why:"Indicateur recoupé avec le registre du personnel."}],
+part:[
+{p:"E",c:"60 % d'énergie renouvelable sur les sites de production",s:"partial",cd:["Rapport ESG 2024",12],cx:["Nos sites sont alimentés à ","60 % par des énergies renouvelables","."],pd:["Factures énergie 2024",3],px:["Part d'électricité d'origine renouvelable facturée : ","52 %"," (garanties d'origine sur 4 sites sur 6)."],conf:88,why:"Écart de 8 points : deux sites ne disposent pas de garanties d'origine.",act:"Demander les garanties d'origine des sites 5 et 6, ou faire corriger l'indicateur."},
+{p:"E",c:"Valorisation de 85 % des déchets industriels",s:"partial",cd:["Rapport ESG 2024",18],cx:["Le taux de valorisation atteint ","85 % des déchets industriels","."],pd:["Bordereaux de déchets",7],px:["Tonnes valorisées rapportées aux tonnes produites : ","78 %"," (hors déchets dangereux)."],conf:85,why:"Le taux dépend du périmètre : les déchets dangereux ne sont pas inclus dans le calcul déclaré.",act:"Faire préciser le périmètre et la méthode de calcul."},
+{p:"S",c:"Politique d'achats responsables déployée auprès des fournisseurs",s:"partial",cd:["Rapport ESG 2024",27],cx:["Notre politique d'achats responsables est ","déployée auprès de nos fournisseurs stratégiques","."],pd:["Évaluation fournisseurs",2],px:["Fournisseurs évalués selon des critères ESG : ","40 % des fournisseurs stratégiques","."],conf:82,why:"Le déploiement existe mais reste partiel par rapport à la formulation.",act:"Obtenir le plan de déploiement et le calendrier d'évaluation."},
+{p:"E",c:"Émissions de scopes 1, 2 et 3 mesurées",s:"partial",cd:["Rapport ESG 2024",13],cx:["Nous mesurons ","nos émissions de scopes 1, 2 et 3",", conformément au GHG Protocol."],pd:["Bilan GES 2024",4],px:["Périmètre du bilan : ","scopes 1 et 2 ; scope 3 partiel (3 catégories sur 15)","."],conf:90,why:"Le scope 3 est incomplet par rapport à la déclaration.",act:"Demander le plan de couverture du scope 3."}],
+bad:[
+{p:"E",c:"Baisse de 40 % des émissions de CO₂ entre 2020 et 2024",s:"contradicted",cd:["Rapport ESG 2024",14],cx:["Nos émissions de CO₂ ont ","diminué de 40 % entre 2020 et 2024","."],pd:["Bilan GES 2024",6],px:["Émissions scopes 1 et 2, 2020 → 2024 : ","−22 %"," (méthode location-based)."],conf:93,why:"L'écart de 18 points dépasse la tolérance méthodologique. Les années de référence diffèrent.",act:"Demander la note méthodologique et le bilan GES certifié."},
+{p:"E",c:"Certification ISO 14001 en cours de validité",s:"contradicted",cd:["Rapport ESG 2024",8],cx:["Nos sites sont ","certifiés ISO 14001","."],pd:["Certificat ISO 14001",1],px:["Date de fin de validité : ","31/03/2024"," (renouvellement non justifié)."],conf:97,why:"Le certificat fourni est expiré.",act:"Exiger l'attestation de renouvellement ou le rapport d'audit de surveillance."},
+{p:"S",c:"Zéro accident du travail avec arrêt en 2024",s:"unsupported",cd:["Rapport ESG 2024",23],cx:["Aucun accident du travail avec arrêt ","n'a été enregistré en 2024","."],pd:null,conf:71,why:"Aucun registre des accidents ni déclaration à la CNSS n'a été fourni pour vérifier l'affirmation.",act:"Demander le registre des accidents du travail 2024."},
+{p:"E",c:"Neutralité carbone atteinte sur le périmètre des sites",s:"unsupported",cd:["Rapport ESG 2024",15],cx:["Nos sites ont atteint ","la neutralité carbone en 2024","."],pd:null,conf:68,why:"Aucun certificat de compensation ni justificatif de crédits carbone n'est joint au dossier.",act:"Demander les certificats de crédits carbone et le périmètre retenu."},
+{p:"G",c:"Comité RSE indépendant rattaché au conseil d'administration",s:"contradicted",cd:["Rapport ESG 2024",30],cx:["Un comité RSE ","indépendant"," est rattaché au conseil d'administration."],pd:["PV du conseil d'administration",6],px:["Composition du comité RSE : ","présidé par le directeur général, aucun administrateur indépendant","."],conf:90,why:"La composition décrite dans le procès-verbal contredit l'indépendance annoncée.",act:"Demander les statuts du comité et la liste de ses membres."},
+{p:"E",c:"Aucun incident environnemental déclaré sur 3 ans",s:"contradicted",cd:["Rapport ESG 2024",19],cx:["Aucun incident environnemental ","n'a été déclaré sur les trois derniers exercices","."],pd:["Registre des incidents",2],px:["Entrée du 14/07/2024 : ","déclaration d'un rejet accidentel d'effluents","."],conf:88,why:"Un incident figure au registre, ce qui contredit l'affirmation.",act:"Demander le rapport d'incident et les mesures correctives."}]};
+
+const CUSTOM={"GT-1042":[
+{p:"E",c:"Réduction des émissions de CO₂ de 32 % entre 2021 et 2024",s:"contradicted",cd:["Rapport ESG 2024",14],cx:["Nos émissions de CO₂ ont ","diminué de 32 % entre 2021 et 2024"," sur l'ensemble du périmètre."],pd:["Bilan GES 2024",6],px:["Émissions scopes 1 et 2, 2021 → 2024 : ","−18 %"," (méthode location-based)."],conf:94,why:"L'écart de 14 points dépasse la tolérance méthodologique (±3 pts). Le rapport ESG ne précise pas l'année de référence.",act:"Demander la note méthodologique et le bilan GES certifié."},
+{p:"E",c:"Certification ISO 14001 en cours de validité",s:"contradicted",cd:["Rapport ESG 2024",8],cx:["Nos usines sont ","certifiées ISO 14001","."],pd:["Certificat ISO 14001",1],px:["Date de fin de validité : ","31/03/2024"," (renouvellement non justifié)."],conf:97,why:"Le certificat fourni est expiré.",act:"Exiger l'attestation de renouvellement ou le rapport d'audit de surveillance."},
+{p:"S",c:"Zéro accident du travail avec arrêt en 2024",s:"unsupported",cd:["Rapport ESG 2024",23],cx:["Aucun accident du travail avec arrêt ","n'a été enregistré en 2024","."],pd:null,conf:71,why:"Aucun registre des accidents ni déclaration à la CNSS n'a été fourni pour vérifier l'affirmation.",act:"Demander le registre des accidents du travail 2024."},
+{p:"E",c:"100 % d'énergie renouvelable sur les sites de production",s:"partial",cd:["Rapport ESG 2024",12],cx:["Nos usines fonctionnent ","à 100 % à l'énergie renouvelable","."],pd:["Factures énergie 2024",3],px:["Part d'origine renouvelable facturée : ","72 %"," (garanties d'origine sur 4 sites sur 5)."],conf:88,why:"Un site ne dispose pas de garantie d'origine : l'affirmation est trop large.",act:"Demander la garantie d'origine du site 5 ou corriger l'indicateur."},
+{p:"E",c:"Consommation d'eau réduite de 25 % grâce au goutte-à-goutte",s:"confirmed",cd:["Rapport ESG 2024",16],cx:["Nos prélèvements d'eau ont été ","réduits de 25 % grâce à l'irrigation goutte-à-goutte","."],pd:["Audit eau 2024",9],px:["Variation des volumes prélevés : ","−23,4 %",", mesurée par compteurs télé-relevés."],conf:92,why:"Écart de 1,6 point, dans la tolérance de mesure."},
+{p:"G",c:"Comité RSE rattaché au conseil d'administration",s:"confirmed",cd:["Rapport ESG 2024",30],cx:["Un comité RSE est ","rattaché au conseil d'administration"," depuis 2023."],pd:["PV du conseil d'administration",6],px:["Création du comité RSE : ","présidé par un administrateur indépendant","."],conf:90,why:"Le procès-verbal confirme la création et le rattachement."}]};
+
+const SEEDS=[
+{id:"GT-1042",name:"Atlas Agro Industries",sector:"Agroalimentaire",city:"Casablanca",amt:85,sub:[62,48,63,68],status:"À valider",an:"Salma B.",at:95},
+{id:"GT-1043",name:"Sahara Cimenterie",sector:"Matériaux",city:"Settat",amt:240,sub:[44,39,52,61],status:"Escaladé",an:"Karim L.",at:190,dec:["esc","Karim L.",30,"Écarts majeurs sur les émissions et la certification. Dossier transmis au comité risques."]},
+{id:"GT-1040",name:"Souss Agrumes Export",sector:"Agriculture",city:"Agadir",amt:35,sub:[78,74,70,72],status:"À valider",an:"Imane R.",at:420},
+{id:"GT-1038",name:"Rif Énergie Solaire",sector:"Énergie",city:"Tétouan",amt:120,sub:[91,88,86,90],status:"Validé",an:"Karim L.",at:2880,dec:["valid","Karim L.",160,"Preuves complètes et cohérentes. Validation sans réserve."]},
+{id:"GT-1036",name:"Médina Textiles",sector:"Textile",city:"Fès",amt:48,sub:[66,58,61,64],status:"En analyse",an:"Imane R.",at:6,run:true},
+{id:"GT-1033",name:"Tanger Logistique Verte",sector:"Transport",city:"Tanger",amt:150,sub:[83,80,77,79],status:"Validé",an:"Youssef T.",at:4300,dec:["valid","Youssef T.",200,"Flotte et émissions documentées. Validé."]},
+{id:"GT-1031",name:"Océan Pêche Maroc",sector:"Pêche",city:"Dakhla",amt:60,sub:[57,51,49,60],status:"Compléments demandés",an:"Salma B.",at:1500,dec:["comp","Salma B.",240,"Registre des incidents et certificats de compensation à fournir sous 15 jours."]},
+{id:"GT-1029",name:"Argan d'Or Coopérative",sector:"Agroalimentaire",city:"Essaouira",amt:8,sub:[86,82,84,74],status:"Validé",an:"Youssef T.",at:7200,dec:["valid","Youssef T.",300,"Dossier exemplaire pour une coopérative de cette taille."]},
+{id:"GT-1027",name:"Chimie du Gharb",sector:"Chimie",city:"Kénitra",amt:190,sub:[49,55,58,66],status:"À valider",an:"Karim L.",at:320},
+{id:"GT-1024",name:"Maghreb BTP Durable",sector:"BTP",city:"Marrakech",amt:95,sub:[72,69,73,70],status:"Validé avec réserves",an:"Imane R.",at:5800,dec:["reserves","Imane R.",180,"Validé sous réserve de la mise à jour du scope 3 d'ici le prochain exercice."]}];
+
+const AUDIT=[]; const FEED=[]; const S={route:"",view:"dash",id:null,tab:"synthese",sel:null,q:"",band:"all",status:"all",sort:"upd",viewed:{},sim:{},draft:{},edit:null,theme:null,run:0,tamper:-1,orig:null,ticks:0,verify:null};
+const DOSSIERS=[];
+
+function buildClaims(d){
+  let arr;
+  if(CUSTOM[d.id])arr=CUSTOM[d.id].map(x=>({...x}));
+  else{const r=rng(parseInt(hstr(d.id),16));const s=d.score;
+    const cnt=s>=80?[5,1,0]:s>=70?[4,1,1]:s>=60?[3,2,1]:s>=50?[2,2,2]:[1,2,3];
+    const pick=(a,n)=>{const c=a.slice();for(let i=c.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c.slice(0,n)};
+    arr=[...pick(POOL.good,cnt[0]),...pick(POOL.part,cnt[1]),...pick(POOL.bad,cnt[2])].map(x=>({...x}))}
+  arr.forEach(x=>x.contrib=CONTRIB[x.s]);
+  arr.sort((a,b)=>a.contrib-b.contrib);
+  arr.forEach((x,i)=>x.id="C"+(i+1));
+  return arr;
+}
+function buildDocs(d){
+  const r=rng(parseInt(hstr(d.id+"d"),16));const names=new Set(["Rapport ESG 2024"]);
+  d.claims.forEach(c=>{names.add(c.cd[0]);if(c.pd)names.add(c.pd[0])});
+  return[...names].map(n=>({n,t:/^(Registre|Factures|Bordereaux|Évaluation)/.test(n)?"XLSX":"PDF",pg:n==="Rapport ESG 2024"?48:Math.round(2+r()*28),conf:Math.round(82+r()*17),h:hstr(n+d.id)+hstr(d.id+n)}));
+}
+function finalize(d){
+  d.score=weighted(d.sub);d.claims=buildClaims(d);d.docs=buildDocs(d);
+  d.base=d.score-d.claims.reduce((a,c)=>a+c.contrib,0);
+  d.conf=Math.round(80+rng(parseInt(hstr(d.id+"c"),16))()*14);
+  d.fb={};d.decision=null;return d;
+}
+function pushAudit(ref,type,actor,action,t){
+  const last=AUDIT[AUDIT.length-1];const when=t||new Date(Math.max(now().getTime(),last?last.t.getTime()+1000:0));
+  const prev=last?last.hash:"00000000";
+  AUDIT.push({t:when,type,actor,action,ref,hash:hstr(prev+when.getTime()+actor+action+ref)});
+}
+function seedAll(){
+  const ev=[];
+  SEEDS.forEach(s=>{
+    const d=finalize({...s});DOSSIERS.push(d);
+    const nBad=d.claims.filter(c=>c.s!=="confirmed").length,pages=d.docs.reduce((a,x)=>a+x.pg,0);
+    const steps=[[0,"Agent Ingestion",`${d.docs.length} documents ingérés, OCR terminé (${pages} pages)`],[2,"Agent Extraction",`${d.claims.length} engagements ESG extraits et liés à leur page source`]];
+    if(!s.run)steps.push([5,"Agent Vérification croisée",`${nBad} incohérence(s) ou lacune(s) détectée(s)`],[7,"Agent Scoring",`ESG Trust Score calculé : ${d.score}/100`],[8,"Agent Explication","Contributions par facteur et sources liées au score générées"]);
+    steps.forEach(([m,a,t])=>ev.push({t:new Date(T(s.at).getTime()+m*60000),type:"agent",actor:a,action:t,ref:d.id}));
+    if(s.dec){const[ch,by,after,txt]=s.dec;const lab=CHOICES.find(c=>c[0]===ch)[2];d.decision={choice:ch,by,t:new Date(T(s.at).getTime()+after*60000),text:txt,seen:nBad,total:nBad};
+      ev.push({t:d.decision.t,type:"human",actor:by,action:`Décision : ${lab} — ${txt}`,ref:d.id})}
+    d.upd=ev.filter(e=>e.ref===d.id).reduce((a,e)=>e.t>a?e.t:a,new Date(0));
+  });
+  ev.sort((a,b)=>a.t-b.t).forEach(e=>pushAudit(e.ref,e.type,e.actor,e.action,e.t));
+  [[2,"Agent Scoring","Trust Score recalculé après ajout de pièces",DOSSIERS[2]],[9,"Agent Vérification croisée","Écart détecté entre affirmation et preuve",DOSSIERS[0]],[14,"Agent Extraction","Nouvelles pièces classées",DOSSIERS[7]]].forEach(([m,a,t,d])=>FEED.push({t:T(m),a,txt:t,d,k:a.includes("Vérif")?"bad":"info"}));
+}
+const byId=id=>DOSSIERS.find(d=>d.id===id);
+const anomalies=d=>d.claims.filter(c=>c.s!=="confirmed");
+const simSet=d=>S.sim[d.id]||(S.sim[d.id]=new Set());
+const simDelta=d=>d.claims.filter(c=>simSet(d).has(c.id)).reduce((a,c)=>a+(4-c.contrib),0);
+const shown=d=>Math.max(0,Math.min(100,d.score+simDelta(d)));
+const avg=()=>Math.round(DOSSIERS.reduce((a,d)=>a+d.score,0)/DOSSIERS.length*10)/10;
+const nf=n=>String(n).replace(".",",");
+
+/* ---------- composants ---------- */
+const chip=(k,t)=>`<span class="chip ${k}"><i></i>${t}</span>`;
+const stChip=s=>`<span class="chip ${STAT[s]}"><i></i>${s}</span>`;
+const clChip=s=>chip(CST[s][0],CST[s][1]);
+const pillScore=sc=>`<span class="pill ${band(sc).k}"><b>${sc}</b><span class="bar"><i style="width:${sc}%"></i></span></span>`;
+const ring=(sc,sim,size)=>{const b=band(sc);return`<div class="ring ${b.k}" ${size?`style="width:${size}px;height:${size}px"`:""} role="img" aria-label="ESG Trust Score ${sc} sur 100"><svg viewBox="0 0 120 120"><circle class="t" cx="60" cy="60" r="52" pathLength="100"/><circle class="p" cx="60" cy="60" r="52" pathLength="100" stroke-dasharray="${sc} 100"/></svg><div class="c"><b class="num"${size?` style="font-size:${Math.round(size*.3)}px"`:""}>${sc}</b>${size?"":"<span>sur 100</span>"}</div></div>`};
+const hl=(c,which)=>{const[a,m,z]=which==="c"?c.cx:c.px;const k=which==="c"?"mute":(c.s==="confirmed"?"good":c.s==="partial"?"warn":"bad");return`<div class="paper ${k}">${esc(a)}<mark>${esc(m)}</mark>${esc(z)}</div>`};
+function toast(t){const b=$("#toastbox");b.innerHTML=`<div class="toast" role="status">${esc(t)}</div>`;clearTimeout(toast.h);toast.h=setTimeout(()=>b.innerHTML="",3200)}
+
+/* ---------- navigation ---------- */
+function navHTML(){
+  const items=[["tableau-de-bord","dash","Tableau de bord","dash"],["dossiers","list2","Dossiers clients","folder",DOSSIERS.length],["analyse","new","Nouvelle analyse","spark"],["agents","agents","Agents IA","cpu"],["audit","audit","Journal d'audit","list"]];
+  const cur=S.view==="detail"?"list2":S.view;
+  $("#nav").innerHTML=items.map(([r,v,l,i,n])=>`<button data-go="${r}" ${v===cur?'aria-current="page"':""}>${ic(i,18)}<span>${l}</span>${n?`<span class="cnt">${n}</span>`:""}</button>`).join("");
+}
+function go(r){try{location.hash=r}catch(e){}apply(r)}
+function apply(r){
+  r=r||"tableau-de-bord";if(r===S.route&&S.view!=="x")return renderView();
+  S.route=r;
+  const m=r.match(/^dossier-(gt-\d+)$/);
+  if(m){const id=m[1].toUpperCase();if(byId(id)){if(S.id!==id){S.tab="synthese";S.sel=null}S.id=id;S.view="detail"}else{S.view="list2"}}
+  else S.view={"tableau-de-bord":"dash",dossiers:"list2",analyse:"new",agents:"agents",audit:"audit"}[r]||"dash";
+  S.run++;window.scrollTo(0,0);navHTML();renderView();
+}
+function renderView(){
+  const v=$("#view");navHTML();
+  v.innerHTML=({dash:viewDash,list2:viewList,new:viewNew,agents:viewAgents,audit:viewAudit,detail:viewDetail}[S.view]||viewDash)();
+  if(S.view==="detail")syncDecision();
+}
+
+/* ---------- tableau de bord ---------- */
+function trendSVG(){
+  const labels=["Avr","Mai","Juin","Juil","Août","Sept","Oct","Nov"],data=[58,59,61,62,64,63,65,avg()];
+  const w=620,h=230,pl=34,pr=18,pt=16,pb=28,mn=50,mx=80,X=i=>pl+i*(w-pl-pr)/(data.length-1),Y=v=>pt+(mx-v)*(h-pt-pb)/(mx-mn);
+  const pts=data.map((v,i)=>[X(i),Y(v)]),line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const area=line+` L${X(data.length-1)} ${h-pb} L${X(0)} ${h-pb}Z`,last=pts[pts.length-1];
+  const grid=[50,60,70,80].map(v=>`<line x1="${pl}" x2="${w-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${pl-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">${v}</text>`).join("");
+  const xl=labels.map((l,i)=>`<text x="${X(i)}" y="${h-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${l}</text>`).join("");
+  return`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block" role="img" aria-label="Évolution du Trust Score moyen d'avril à novembre"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${area}" fill="url(#ga)"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${pts.slice(0,-1).map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>`).join("")}<circle cx="${last[0]}" cy="${last[1]}" r="6" fill="var(--accent)"/><text x="${last[0]-10}" y="${last[1]-12}" text-anchor="end" font-size="13" font-weight="600" fill="var(--fg)" font-family="var(--mono)">${nf(data[data.length-1])}</text>${xl}</svg>`;
+}
+function feedLi(f,isNew){return`<li class="li ${isNew?"new":""}"><span class="chip ${f.k}" style="padding:2px 6px"><i></i></span><div class="grow"><b style="font-weight:600">${esc(f.a)}</b> · <a href="#dossier-${f.d.id.toLowerCase()}" data-go="dossier-${f.d.id.toLowerCase()}" style="color:var(--accent);text-decoration:none">${esc(f.d.name)}</a><small>${esc(f.txt)}</small></div><span class="t">${rel(f.t)}</span></li>`}
+function viewDash(){
+  const open=DOSSIERS.filter(d=>["À valider","Escaladé","En analyse","Compléments demandés"].includes(d.status));
+  const alerts=open.reduce((a,d)=>a+d.claims.filter(c=>c.s==="contradicted").length,0);
+  const dist=["good","warn","bad"].map(k=>[k,DOSSIERS.filter(d=>band(d.score).k===k).length]);
+  const names={good:"Fiable",warn:"À surveiller",bad:"Risque élevé"};
+  const queue=DOSSIERS.filter(d=>["À valider","Escaladé"].includes(d.status)).sort((a,b)=>a.score-b.score);
+  return`<div class="phead"><div><h1>Tableau de bord ESG</h1><p>Portefeuille entreprises · ${fmt(now())} · données fictives</p></div><button class="btn pri" data-go="analyse">${ic("spark")}Nouvelle analyse</button></div>
+  <div class="grid g4">
+   <div class="card kpi"><div class="lab">Dossiers suivis</div><div class="val">${DOSSIERS.length}</div><div class="ft"><span class="up">+3</span> sur les 30 derniers jours</div></div>
+   <div class="card kpi"><div class="lab">ESG Trust Score moyen</div><div class="val">${nf(avg())}<small>/100</small></div><div class="ft"><span class="up">+${nf(Math.max(0,Math.round((avg()-65)*10)/10))} pt</span> vs octobre</div></div>
+   <div class="card kpi"><div class="lab">Alertes de greenwashing</div><div class="val">${alerts}</div><div class="ft">affirmations contradictoires sur dossiers ouverts</div></div>
+   <div class="card kpi"><div class="lab">Délai moyen d'analyse</div><div class="val">4<small>min</small></div><div class="ft">contre environ 3 jours en traitement manuel (estimation)</div></div>
+  </div>
+  <div class="grid g21">
+   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+    <div class="card"><div class="chead"><div><h3>Évolution du Trust Score moyen</h3><p class="sub">Portefeuille complet, mensuel, 2026</p></div>${chip("info","Données de démonstration")}</div>${trendSVG()}</div>
+    <div class="card"><div class="chead"><div><h3>À valider en priorité</h3><p class="sub">Classés du risque le plus élevé au plus faible</p></div><button class="btn sm" data-go="dossiers">Tous les dossiers</button></div>
+     <div class="tw"><table><thead><tr><th>Entreprise</th><th>Trust Score</th><th>Alertes</th><th>Statut</th><th></th></tr></thead><tbody>${queue.map(d=>`<tr data-go="dossier-${d.id.toLowerCase()}"><td class="co"><b>${esc(d.name)}</b><span>${d.id} · ${d.sector}</span></td><td>${pillScore(d.score)}</td><td class="num">${anomalies(d).length}</td><td>${stChip(d.status)}</td><td>${ic("arrow")}</td></tr>`).join("")||`<tr><td colspan="5" class="muted">Aucun dossier en attente.</td></tr>`}</tbody></table></div></div>
+   </div>
+   <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+    <div class="card"><div class="chead"><div><h3>Répartition du portefeuille</h3><p class="sub">Par niveau de fiabilité</p></div></div>
+     <div class="dist">${dist.map(([k,n])=>`<div class="row ${k}"><span class="chip ${k}" style="justify-self:start"><i></i>${names[k]}</span><div class="bar"><i style="width:${n/DOSSIERS.length*100}%"></i></div><b class="mono">${n}</b></div>`).join("")}</div></div>
+    <div class="card"><div class="chead"><div><h3>Activité des agents</h3><p class="sub">Flux en direct</p></div><span class="chip good"><i></i>En ligne</span></div><ul class="list feed" id="feed">${FEED.slice(0,6).map(f=>feedLi(f)).join("")}</ul></div>
+   </div>
+  </div>`;
+}
+
+/* ---------- dossiers ---------- */
+function filtered(){
+  let a=DOSSIERS.filter(d=>(S.band==="all"||band(d.score).k===S.band)&&(S.status==="all"||d.status===S.status)&&(!S.q||(d.name+d.id+d.sector+d.city).toLowerCase().includes(S.q.toLowerCase())));
+  const f={upd:(x,y)=>y.upd-x.upd,asc:(x,y)=>x.score-y.score,desc:(x,y)=>y.score-x.score,amt:(x,y)=>y.amt-x.amt}[S.sort];return a.sort(f);
+}
+function rowsHTML(){
+  const a=filtered();if(!a.length)return`<tr><td colspan="8" class="muted" style="text-align:center;padding:30px">Aucun dossier ne correspond à ces critères.</td></tr>`;
+  return a.map(d=>`<tr data-go="dossier-${d.id.toLowerCase()}"><td class="co"><b>${esc(d.name)}</b><span>${d.id} · ${esc(d.city)}</span></td><td>${d.sector}</td><td class="num">${d.amt} M MAD</td><td>${pillScore(d.score)}</td><td class="num">${anomalies(d).length}</td><td>${stChip(d.status)}</td><td>${d.an}</td><td class="muted" style="white-space:nowrap">${rel(d.upd)}</td></tr>`).join("");
+}
+function viewList(){
+  const sts=["all",...Object.keys(STAT)];
+  return`<div class="phead"><div><h1>Dossiers clients</h1><p>Entreprises à évaluer pour un financement ou un prêt vert</p></div><button class="btn pri" data-go="analyse">${ic("spark")}Nouvelle analyse</button></div>
+  <div class="card"><div class="toolbar">
+   <div class="seg" role="group" aria-label="Niveau de fiabilité">${[["all","Tous"],["good","Fiable"],["warn","À surveiller"],["bad","Risque élevé"]].map(([k,l])=>`<button data-band="${k}" aria-pressed="${S.band===k}">${l}</button>`).join("")}</div>
+   <select class="in" id="fstatus" style="width:auto" aria-label="Statut">${sts.map(s=>`<option value="${s}" ${S.status===s?"selected":""}>${s==="all"?"Tous les statuts":s}</option>`).join("")}</select>
+   <select class="in" id="fsort" style="width:auto" aria-label="Tri">${[["upd","Dernière activité"],["asc","Score croissant"],["desc","Score décroissant"],["amt","Montant décroissant"]].map(([k,l])=>`<option value="${k}" ${S.sort===k?"selected":""}>${l}</option>`).join("")}</select>
+   <span class="spacer"></span><span class="muted" id="fcount">${filtered().length} dossier(s)</span></div>
+   <div class="tw"><table><thead><tr><th>Entreprise</th><th>Secteur</th><th>Financement</th><th>Trust Score</th><th>Alertes</th><th>Statut</th><th>Analyste</th><th>Activité</th></tr></thead><tbody id="tbody">${rowsHTML()}</tbody></table></div></div>`;
+}
+function refreshRows(){const t=$("#tbody");if(t){t.innerHTML=rowsHTML();$("#fcount").textContent=filtered().length+" dossier(s)"}}
+
+/* ---------- dossier : détail ---------- */
+function viewDetail(){
+  const d=byId(S.id),sc=shown(d),b=band(sc),dl=simDelta(d),nA=anomalies(d).length;
+  const rec=band(d.score).k==="good"?["Validation recommandée","Les preuves sont cohérentes et traçables. Une revue rapide suffit."]:band(d.score).k==="warn"?["Validation avec réserves recommandée","Plusieurs affirmations restent partielles. Demander des compléments avant décision finale."]:["Escalade recommandée au comité risques","Des affirmations majeures sont contredites ou sans preuve. Une décision automatique n'est pas appropriée."];
+  const tabs=[["synthese","Synthèse"],["preuves","Preuves et incohérences",nA],["xai","Explicabilité"],["audit","Piste d'audit"]];
+  const run=d.status==="En analyse";
+  const body={synthese:tabSynth,preuves:tabProofs,xai:tabXai,audit:tabAudit}[S.tab](d);
+  return`<button class="btn ghost sm back" data-go="dossiers">${ic("back")}Dossiers clients</button>
+  <div class="phead"><div><h1>${esc(d.name)}</h1><p>${d.id} · ${d.sector} · ${esc(d.city)} · Prêt vert demandé : <b class="num">${d.amt} M MAD</b> · Analyste : ${d.an}</p></div><div>${stChip(d.status)}</div></div>
+  <div class="dgrid"><div class="dmain">
+   <div class="card">${run?`<div class="warnline" style="margin-bottom:14px;background:var(--info-soft);color:var(--info)">Analyse en cours : l'Agent Vérification croisée traite les pièces (étape 3 sur 5). Le score est provisoire.</div>`:""}
+    <div class="hero">${ring(sc,dl)}<div class="dims"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="lbl" style="text-transform:uppercase;letter-spacing:.06em">ESG Trust Score</span>${chip(b.k,b.l)}${dl?chip("info",`Simulation ${dl>0?"+":""}${dl} pts`):""}<span class="muted" style="font-size:12px">Confiance du modèle : <b class="mono">${d.conf} %</b></span></div>
+     ${DIMS.map((x,i)=>`<div class="dim"><span>${x[0]}<small>${x[1]}</small></span><div class="bar ${band(d.sub[i]).k}"><i style="width:${d.sub[i]}%"></i></div><b class="mono">${d.sub[i]}</b></div>`).join("")}</div></div>
+    <div class="rec ${band(d.score).k}">${ic("shield",18)}<div><b>${rec[0]}</b><div class="muted" style="font-size:13px">${rec[1]} La décision finale appartient à l'analyste.</div></div></div></div>
+   <div><div class="tabs" role="tablist">${tabs.map(([k,l,n])=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div></div>
+   ${body}</div>
+   <div class="aside">${decisionPanel(d)}</div></div>`;
+}
+function pillarScores(d){
+  const w={confirmed:1,partial:.55,unsupported:.15,contradicted:0};
+  return["E","S","G"].map(p=>{const c=d.claims.filter(x=>x.p===p);return[p,c.length?Math.round(c.reduce((a,x)=>a+w[x.s],0)/c.length*100):null,c.length]});
+}
+function tabSynth(d){
+  const cnt=k=>d.claims.filter(c=>c.s===k).length,top=anomalies(d).slice(0,3);
+  return`<div class="grid g2"><div class="card"><div class="chead"><div><h3>Constats de l'agent</h3><p class="sub">${d.claims.length} engagements ESG extraits et recoupés</p></div></div>
+   <div class="stats">${[["confirmed","Confirmés","good"],["partial","Partiels","warn"],["contradicted","Contredits","bad"],["unsupported","Sans preuve","bad"]].map(([k,l,c])=>`<div class="stat ${c}"><b style="color:var(--c)">${cnt(k)}</b><span>${l}</span></div>`).join("")}</div>
+   <h3 style="margin:18px 0 8px">Points d'attention</h3><ul class="list">${top.map(c=>`<li class="li"><div class="grow"><div style="display:flex;gap:8px;align-items:center;margin-bottom:3px">${clChip(c.s)}<span class="pl">${c.p}</span></div>${esc(c.c)}</div><button class="btn sm" data-claim="${c.id}">Examiner</button></li>`).join("")||`<li class="li muted">Aucune anomalie détectée.</li>`}</ul></div>
+   <div class="card"><div class="chead"><div><h3>Couverture par pilier</h3><p class="sub">Part des engagements étayés par une preuve</p></div></div>
+   <div style="display:flex;flex-direction:column;gap:16px">${pillarScores(d).map(([p,v,n])=>`<div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span><b>${PIL[p]}</b> <span class="muted">· ${n} engagement(s)</span></span><b class="mono">${v===null?"—":v}</b></div><div class="bar ${v===null?"":band(v).k}"><i style="width:${v||0}%"></i></div></div>`).join("")}</div>
+   <p class="sub" style="margin-top:16px">Calcul : confirmé = 100, partiel = 55, non étayé = 15, contredit = 0, moyenne par pilier.</p></div></div>
+  <div class="card"><div class="chead"><div><h3>Documents analysés</h3><p class="sub">${d.docs.length} pièces · empreinte enregistrée pour chaque source</p></div></div><div class="tw"><table><thead><tr><th>Document</th><th>Type</th><th>Pages</th><th>Confiance d'extraction</th><th>Empreinte</th></tr></thead><tbody>${d.docs.map(x=>`<tr><td><b style="font-weight:500">${ic("file")} ${esc(x.n)}</b></td><td><span class="pl">${x.t}</span></td><td class="num">${x.pg}</td><td>${pillScore(x.conf)}</td><td class="mono muted">${x.h.slice(0,6)}…${x.h.slice(-4)}</td></tr>`).join("")}</tbody></table></div></div>`;
+}
+function tabProofs(d){
+  const a=d.claims,c=a.find(x=>x.id===S.sel)||anomalies(d)[0]||a[0];
+  const fb=d.fb[c.id];const k=CST[c.s][0];
+  const evs=[{role:"Affirmation de l'entreprise",doc:c.cd,w:"c"}].concat(c.pd?[{role:"Pièce justificative",doc:c.pd,w:"p"}]:[]);
+  const dh=n=>{const x=d.docs.find(z=>z.n===n);return x?x.h:"—"};
+  return`<div class="proofs"><div class="clist">${a.map(x=>`<button class="citem" data-claim="${x.id}" aria-pressed="${x.id===c.id}"><div class="r">${clChip(x.s)}<span class="pl">${PIL[x.p]}</span></div><p>${esc(x.c)}</p><div class="r"><span class="muted" style="font-size:12px">${x.contrib>0?"+":""}${x.contrib} pts sur le score</span>${(S.viewed[d.id]||new Set()).has(x.id)?`<span class="muted" style="font-size:12px">${ic("eye",13)} consulté</span>`:""}</div></button>`).join("")}</div>
+  <div class="card"><div class="chead"><div><h3>${esc(c.c)}</h3><p class="sub">${PIL[c.p]} · fiabilité de l'extraction ${c.conf} %</p></div>${clChip(c.s)}</div>
+   ${evs.map(e=>`<div class="ev ${e.w==="c"?"mute":k}"><header><span><b>${esc(e.doc[0])}</b> · page ${e.doc[1]}</span><span class="chip ${e.w==="c"?"mute":k}">${e.role}</span></header>${hl(c,e.w)}<footer><span class="mono">empreinte ${dh(e.doc[0]).slice(0,8)}…</span><button class="btn sm" data-a="opensrc" data-doc="${esc(e.doc[0])}" data-pg="${e.doc[1]}">${ic("file",14)}Ouvrir la source</button></footer></div>`).join("")}
+   ${c.pd?"":`<div class="missing"><b style="display:block;color:var(--fg)">Aucune pièce justificative trouvée</b>L'agent a parcouru les ${d.docs.length} documents du dossier sans retrouver de preuve.</div>`}
+   <div class="why"><b>Pourquoi cette alerte</b>${esc(c.why)}${c.act?`<div style="margin-top:8px"><b>Action recommandée</b>${esc(c.act)}</div>`:""}</div>
+   ${c.s!=="confirmed"?`<div class="fb"><span class="muted" style="font-size:12px">Votre avis sur ce constat :</span>${fb?chip(fb==="ok"?"bad":"good",fb==="ok"?"Anomalie confirmée par vous":"Écartée comme faux positif"):""}<button class="btn sm" data-a="fb" data-v="ok" data-c="${c.id}">Confirmer l'anomalie</button><button class="btn sm" data-a="fb" data-v="fp" data-c="${c.id}">Faux positif</button></div>`:""}</div></div>`;
+}
+function tabXai(d){
+  const sc=shown(d),dl=simDelta(d),res=anomalies(d),max=10;
+  const rows=d.claims.map(c=>{const eff=simSet(d).has(c.id)?4:c.contrib,v=eff;const w=Math.abs(v)/max*50;const k=v>=0?"good":"bad";
+    return`<div class="wfr"><div class="nm">${esc(c.c)}<small>${PIL[c.p]} · ${CST[c.s][1]}${simSet(d).has(c.id)?" → résolu (simulation)":""}</small></div><div class="dv ${k}"><i style="${v>=0?`left:50%;width:${w}%`:`right:50%;width:${w}%`}"></i></div><span class="v ${k}" style="color:var(--c)">${v>0?"+":""}${v}</span></div>`}).join("");
+  return`<div class="grid g21" style="align-items:start"><div class="card"><div class="chead"><div><h3>Comment le score est construit</h3><p class="sub">Contribution de chaque engagement au score, à partir de la référence sectorielle</p></div>${chip("info","Valeurs illustratives")}</div>
+   <div class="wf"><div class="wfr"><div class="nm"><b>Référence sectorielle</b><small>${d.sector}, entreprises comparables</small></div><div></div><span class="v">${d.base}</span></div>${rows}
+   <div class="wfr tot"><div class="nm">ESG Trust Score${dl?" (simulé)":""}</div><div></div><span class="v">${sc}</span></div></div>
+   <p class="sub" style="margin-top:14px">Les barres vers la droite augmentent la confiance, celles vers la gauche la diminuent. Chaque barre renvoie à ses pièces sources dans l'onglet Preuves.</p></div>
+  <div class="grid" style="grid-template-columns:minmax(0,1fr)"><div class="card sim"><div class="chead"><div><h3>Simulateur contrefactuel</h3><p class="sub">Que se passe-t-il si l'entreprise corrige ces points ?</p></div></div>
+   ${res.map(c=>`<label><input type="checkbox" data-sim="${c.id}" ${simSet(d).has(c.id)?"checked":""}><span>${esc(c.c)}<small>${c.act||""}</small></span></label>`).join("")||`<p class="muted">Aucun point à corriger.</p>`}
+   <div class="simres"><b class="num">${sc}</b><div><div>${dl?`<b style="font-size:14px">${dl>0?"+":""}${dl} pts</b> par rapport au score actuel (${d.score})`:`Score actuel : ${d.score}`}</div><div class="muted" style="font-size:12px">Niveau : ${band(sc).l}</div></div></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Pondération du score</h3><div class="prin">${DIMS.map((x,i)=>`<div class="row" style="grid-template-columns:150px 1fr 44px"><span>${x[0]}</span><div class="bar"><i style="width:${W[i]*100*3}%"></i></div><b class="mono">${x[1]}</b></div>`).join("")}</div></div></div></div>`;
+}
+function tabAudit(d){
+  const a=AUDIT.filter(e=>e.ref===d.id);
+  return`<div class="card"><div class="chead"><div><h3>Piste d'audit du dossier</h3><p class="sub">Chaque événement est horodaté et chaîné au précédent par une empreinte</p></div><button class="btn sm" data-go="audit">Journal complet</button></div>
+  <div class="tl">${a.map(e=>`<div class="tle ${e.type}"><div class="hd"><b>${esc(e.actor)}</b><span>${fmt(e.t)}</span>${e.type==="human"?chip("good","Humain"):chip("info","Agent IA")}</div><p>${esc(e.action)}</p><div class="hs">empreinte ${e.hash}</div></div>`).join("")}</div></div>`;
+}
+function decisionPanel(d){
+  const todo=anomalies(d),seen=todo.filter(c=>(S.viewed[d.id]||new Set()).has(c.id)).length,dr=S.draft[d.id]||{choice:"",text:""};
+  const stepIdx=d.status==="En analyse"?1:d.decision?3:2,st=["Ingestion","Analyse IA","Revue analyste","Décision"];
+  const stepper=`<div class="steps">${st.map((s,i)=>`<span class="${i<stepIdx?"d":i===stepIdx?"a":""}">${s}</span>`).join("")}</div>`;
+  if(d.decision&&S.edit!==d.id){const ch=CHOICES.find(c=>c[0]===d.decision.choice);
+    return`<div class="card"><div class="chead"><div><h3>Décision enregistrée</h3><p class="sub">Supervision humaine (Human-in-the-Loop)</p></div></div>${stepper}
+    <div style="margin:14px 0 10px">${chip(ch[3],ch[2])}</div><p>${esc(d.decision.text)}</p>
+    <p class="sub" style="margin-top:10px">${esc(d.decision.by)} · ${fmt(d.decision.t)}<br>Sources consultées : ${d.decision.seen}/${d.decision.total}</p>
+    <button class="btn sm" style="margin-top:14px" data-a="editdec">Modifier la décision</button></div>`}
+  if(d.status==="En analyse")return`<div class="card"><h3>Décision de l'analyste</h3><p class="sub" style="margin:4px 0 12px">Disponible une fois l'analyse terminée.</p>${stepper}</div>`;
+  const recK=band(d.score).k==="good"?"valid":band(d.score).k==="warn"?"reserves":"esc";
+  return`<div class="card"><div class="chead"><div><h3>Décision de l'analyste</h3><p class="sub">Aucune décision n'est automatique</p></div></div>${stepper}
+   <div style="margin:14px 0 6px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span class="muted">Anomalies examinées</span><b class="mono">${seen}/${todo.length}</b></div><div class="bar ${seen===todo.length?"good":"warn"}"><i style="width:${todo.length?seen/todo.length*100:100}%"></i></div></div>
+   ${seen<todo.length?`<div class="warnline" style="margin:8px 0">Certaines anomalies n'ont pas été ouvertes. Elles seront signalées dans le journal.</div>`:""}
+   <div style="display:flex;flex-direction:column;gap:7px;margin:12px 0">${CHOICES.map(([k,l,,c])=>`<label class="radio"><input type="radio" name="dchoice" value="${k}" ${dr.choice===k?"checked":""}><span>${l}</span>${k===recK?`<span class="chip info">Reco. IA</span>`:""}</label>`).join("")}</div>
+   <div class="field"><label for="dtext">Justification (conservée dans le journal)</label><textarea class="in" id="dtext" placeholder="Résumez les éléments qui fondent votre décision…">${esc(dr.text)}</textarea></div>
+   <div class="err" id="derr" style="min-height:18px;margin-top:4px"></div>
+   <button class="btn pri" id="dsave" style="width:100%;justify-content:center" data-a="savedec">${ic("check")}Enregistrer la décision</button></div>`;
+}
+function syncDecision(){const b=$("#dsave");if(!b)return}
+
+/* ---------- nouvelle analyse ---------- */
+const SFILES=[["Rapport ESG 2024.pdf","4,2 Mo"],["Bilan GES 2024.pdf","1,8 Mo"],["Certificat ISO 14001.pdf","0,3 Mo"],["Factures énergie 2024.xlsx","0,9 Mo"],["Registre des formations.xlsx","0,5 Mo"],["PV du conseil d'administration.pdf","1,1 Mo"]];
+const PSTEPS=[["Ingestion et OCR","Agent Ingestion",["Lecture des fichiers déposés","OCR multilingue (français, arabe) terminé","Classification : rapport, certificat, registre, facture"]],["Extraction des engagements ESG","Agent Extraction",["Détection des affirmations chiffrées","Normalisation des unités (tCO₂e, MWh, m³)","Liaison de chaque affirmation à sa page source"]],["Vérification croisée","Agent Vérification croisée",["Comparaison affirmation et preuve","Contrôle de validité des certificats","Détection des périmètres et années de référence divergents"]],["Calcul du ESG Trust Score","Agent Scoring",["Pondération : fiabilité 30, cohérence 30, traçabilité 25, couverture 15","Intervalle de confiance calculé"]],["Explication et traçabilité","Agent Explication",["Contribution de chaque facteur calculée","Empreintes des sources enregistrées","Événements d'audit chaînés"]]];
+function viewNew(){
+  return`<div class="phead"><div><h1>Nouvelle analyse ESG</h1><p>Déposez les pièces d'un client : les agents IA les analysent et proposent un Trust Score explicable</p></div></div>
+  <div class="grid g2" style="align-items:start"><div class="card"><div class="chead"><div><h3>Entreprise et pièces</h3><p class="sub">Les fichiers sont simulés dans ce prototype</p></div></div>
+   <div class="grid g2" style="gap:12px"><div class="field" style="grid-column:1/-1"><label for="f-name">Raison sociale</label><input class="in" id="f-name" placeholder="Ex. Anfa Emballages Verts" value=""></div>
+   <div class="field"><label for="f-sector">Secteur</label><select class="in" id="f-sector">${["Agroalimentaire","Énergie","Textile","BTP","Chimie","Transport","Matériaux","Agriculture","Pêche"].map(s=>`<option>${s}</option>`).join("")}</select></div>
+   <div class="field"><label for="f-city">Ville</label><select class="in" id="f-city">${["Casablanca","Rabat","Tanger","Marrakech","Agadir","Fès","Kénitra"].map(s=>`<option>${s}</option>`).join("")}</select></div>
+   <div class="field"><label for="f-amt">Financement demandé (M MAD)</label><input class="in" id="f-amt" type="number" min="1" value="50"></div></div>
+   <div class="drop" style="margin-top:16px">${ic("upload",22)}<div style="margin-top:4px">Glissez les documents ici ou cochez les pièces d'exemple</div></div>
+   <div class="files">${SFILES.map(([n,s],i)=>`<label><input type="checkbox" class="fchk" checked><span>${ic("file",15)} ${n}</span><small>${s}</small></label>`).join("")}</div>
+   <button class="btn pri" id="runbtn" data-a="run" style="margin-top:16px">${ic("spark")}Lancer l'analyse</button></div>
+  <div class="card"><div class="chead"><div><h3>Chaîne d'agents IA</h3><p class="sub" id="pstate">En attente du lancement</p></div></div>
+   <div class="bar" style="margin-bottom:8px"><i id="pbar" style="width:0%"></i></div>
+   <div class="pipe" id="pipe">${PSTEPS.map(([t,a],i)=>`<div class="ps" id="ps${i}"><div class="ic">${i+1}</div><div><b>${t}</b><small>${a}</small><div class="log" id="pl${i}"></div></div></div>`).join("")}</div><div id="pdone"></div></div></div>`;
+}
+async function runAnalysis(){
+  const token=++S.run;const name=($("#f-name").value||"").trim()||"Entreprise exemple",files=$$(".fchk").filter(x=>x.checked).length;
+  if(!files){toast("Sélectionnez au moins un document.");S.run--;return}
+  const sec=$("#f-sector").value,city=$("#f-city").value,amt=Math.max(1,+$("#f-amt").value||50);
+  $("#runbtn").disabled=true;$("#pdone").innerHTML="";
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms)),live=()=>S.run===token&&S.view==="new";
+  const r=rng(parseInt(hstr(name),16)),cov=Math.min(92,38+files*9);
+  const sub=[Math.round(44+r()*46),Math.round(40+r()*50),Math.round(46+r()*42),cov];
+  for(let i=0;i<PSTEPS.length;i++){
+    if(!live())return;
+    $("#ps"+i).className="ps run";$("#pstate").textContent=`Étape ${i+1} sur ${PSTEPS.length} · ${PSTEPS[i][1]}`;
+    for(const l of PSTEPS[i][2]){if(!live())return;$("#pl"+i).insertAdjacentHTML("beforeend",`<div>${esc(l)}</div>`);await sleep(380)}
+    $("#ps"+i).className="ps done";$("#ps"+i).querySelector(".ic").textContent="✓";$("#pbar").style.width=((i+1)/PSTEPS.length*100)+"%";
+  }
+  const d=finalize({id:"GT-"+(1044+DOSSIERS.length-SEEDS.length),name,sector:sec,city,amt,sub,status:"À valider",an:"Salma B.",at:0});
+  const nBad=anomalies(d).length,pages=d.docs.reduce((a,x)=>a+x.pg,0);
+  DOSSIERS.unshift(d);d.upd=now();
+  pushAudit(d.id,"agent","Agent Ingestion",`${files} documents ingérés, OCR terminé (${pages} pages)`);
+  pushAudit(d.id,"agent","Agent Extraction",`${d.claims.length} engagements ESG extraits et liés à leur page source`);
+  pushAudit(d.id,"agent","Agent Vérification croisée",`${nBad} incohérence(s) ou lacune(s) détectée(s)`);
+  pushAudit(d.id,"agent","Agent Scoring",`ESG Trust Score calculé : ${d.score}/100`);
+  pushAudit(d.id,"agent","Agent Explication","Contributions par facteur et sources liées au score générées");
+  FEED.unshift({t:now(),a:"Agent Scoring",txt:`Trust Score ${d.score}/100 calculé`,d,k:"good"});
+  if(!live())return;
+  navHTML();$("#pstate").textContent="Analyse terminée";
+  $("#pdone").innerHTML=`<div class="simres" style="margin-top:14px">${ring(d.score,false,76)}<div style="flex:1"><b style="font-size:15px">${esc(d.name)} · ${d.score}/100</b><div class="muted" style="font-size:13px">${band(d.score).l} · ${nBad} point(s) à examiner</div></div><button class="btn pri" data-go="dossier-${d.id.toLowerCase()}">Ouvrir le dossier ${ic("arrow",14)}</button></div>`;
+  toast("Analyse terminée : dossier "+d.id+" créé.");
+}
+
+/* ---------- agents ---------- */
+const AG=[["Agent Ingestion","OCR, classification des pièces","v2.4",1248,420,96,4],["Agent Extraction","Engagements ESG et unités","v3.1",862,610,92,7],["Agent Vérification croisée","Affirmation contre preuve","v1.9",640,780,89,11],["Agent Scoring","ESG Trust Score","v2.2",410,190,94,5],["Agent Explication","Contributions et sources","v1.6",410,350,97,3]];
+function viewAgents(){
+  return`<div class="phead"><div><h1>Agents IA et gouvernance</h1><p>Chaîne d'agents, contrôles de confiance et points de branchement Salesforce</p></div></div>
+  <div class="card"><div class="chead"><div><h3>Chaîne de traitement</h3><p class="sub">Chaque étape est tracée. L'analyste garde la décision finale.</p></div></div>
+  <div class="flow">${["Dépôt des pièces","Ingestion","Extraction","Vérification croisée","Scoring","Explication"].map(n=>`<span class="node">${n}</span>${ic("arrow",14)}`).join("")}<span class="node h">${ic("user",14)} Validation humaine</span></div></div>
+  <div class="acards">${AG.map(([n,r,v,docs,lat,conf,corr],i)=>`<div class="card acard"><div class="top2"><div class="ai">${ic("cpu",18)}</div><div style="flex:1"><b>${n}</b><div class="sub">${r}</div></div><span class="chip good"><i></i>Actif</span></div>
+   <dl><dt>Version</dt><dd>${v}</dd><dt>Traités aujourd'hui</dt><dd data-live="n${i}" data-v="${docs}">${docs}</dd><dt>Latence p95</dt><dd data-live="l${i}" data-v="${lat}">${lat} ms</dd><dt>Confiance moyenne</dt><dd>${conf} %</dd><dt>Corrigé par un humain</dt><dd>${corr} %</dd></dl></div>`).join("")}</div>
+  <div class="grid g2" style="align-items:start"><div class="card"><div class="chead"><div><h3>Principes de l'IA de confiance</h3><p class="sub">Indicateurs de conformité du portefeuille</p></div></div>
+   <div class="prin">${[["Explicabilité",100,"Score décomposé par facteur"],["Traçabilité",100,"Source et empreinte par preuve"],["Supervision humaine",100,"Décision analyste obligatoire"],["Robustesse",93,"Tests sur documents bruités"],["Équité sectorielle",88,"Référence par secteur"]].map(([l,v])=>`<div class="row"><span>${l}</span><div class="bar ${band(v).k}"><i style="width:${v}%"></i></div><b class="mono">${v} %</b></div>`).join("")}</div></div>
+  <div class="card intg"><div class="chead"><div><h3>Branchement Salesforce</h3><p class="sub">Points à connecter au backend</p></div>${chip("warn","Non connecté")}</div>
+   <div class="tw"><table><thead><tr><th>Objet</th><th>Rôle</th><th>État</th></tr></thead><tbody>${[["Account","Entreprise cliente","Données locales"],["ESG_Assessment__c","Analyse et Trust Score","Données locales"],["Evidence__c","Preuves et empreintes","Données locales"],["Finding__c","Incohérences détectées","Données locales"],["Decision__c","Décision de l'analyste","Données locales"],["AuditEvent__c","Journal chaîné","Données locales"]].map(r=>`<tr><td><span class="code">${r[0]}</span></td><td>${r[1]}</td><td>${chip("mute",r[2])}</td></tr>`).join("")}</tbody></table></div>
+   <p class="sub" style="margin-top:12px">Les noms d'objets sont indicatifs : à remplacer par le modèle de données réel de l'organisation.</p></div></div>`;
+}
+
+/* ---------- audit ---------- */
+function verifyChain(){let prev="00000000";for(let i=0;i<AUDIT.length;i++){const e=AUDIT[i];if(hstr(prev+e.t.getTime()+e.actor+e.action+e.ref)!==e.hash)return i;prev=e.hash}return-1}
+function viewAudit(){
+  const list=AUDIT.slice().reverse(),v=S.verify;
+  return`<div class="phead"><div><h1>Journal d'audit</h1><p>Chaque événement est chaîné au précédent : toute modification est détectable</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-a="tamper">${S.tamper>=0?"Restaurer le journal":"Simuler une altération"}</button><button class="btn pri" data-a="verify">${ic("shield")}Vérifier l'intégrité</button></div></div>
+  ${v!==null?`<div class="card ${v===-1?"good":"bad"}" style="border-color:var(--c);background:var(--cs)"><div class="hashok">${ic(v===-1?"check":"alert",18)}<b>${v===-1?`Chaîne intègre : ${AUDIT.length} événements vérifiés.`:`Altération détectée à l'événement n° ${v+1} (${esc(AUDIT[v].ref)}). Les empreintes suivantes ne sont plus valides.`}</b></div></div>`:""}
+  <div class="card"><div class="tw"><table><thead><tr><th>Date</th><th>Dossier</th><th>Acteur</th><th>Événement</th><th>Empreinte</th></tr></thead><tbody>${list.map(e=>{const i=AUDIT.indexOf(e);return`<tr ${v!==null&&v!==-1&&i>=v?'style="background:var(--bad-soft)"':""}><td class="mono" style="white-space:nowrap">${fmt(e.t)}</td><td><a href="#dossier-${e.ref.toLowerCase()}" data-go="dossier-${e.ref.toLowerCase()}" style="color:var(--accent);text-decoration:none;font-weight:500">${e.ref}</a></td><td style="white-space:nowrap">${e.type==="human"?chip("good",esc(e.actor)):chip("info",esc(e.actor))}</td><td style="min-width:260px">${esc(e.action)}</td><td class="mono muted">${e.hash}</td></tr>`}).join("")}</tbody></table></div></div>`;
+}
+
+/* ---------- événements ---------- */
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]");if(g&&!e.target.closest("[data-a]")){e.preventDefault();go(g.dataset.go);return}
+  const t=e.target.closest("[data-tab]");if(t){S.tab=t.dataset.tab;renderView();return}
+  const cl=e.target.closest("[data-claim]");if(cl&&S.view==="detail"){const d=byId(S.id);S.sel=cl.dataset.claim;S.tab="preuves";(S.viewed[d.id]||(S.viewed[d.id]=new Set())).add(S.sel);renderView();return}
+  const bd=e.target.closest("[data-band]");if(bd){S.band=bd.dataset.band;renderView();return}
+  const a=e.target.closest("[data-a]");if(!a)return;
+  const act=a.dataset.a,d=S.id?byId(S.id):null;
+  if(act==="opensrc")toast(`Prototype : ouverture de « ${a.dataset.doc} », page ${a.dataset.pg}, via Salesforce Files.`);
+  if(act==="fb"){const c=d.claims.find(x=>x.id===a.dataset.c);d.fb[c.id]=a.dataset.v;pushAudit(d.id,"human","Salma B.",a.dataset.v==="ok"?`Anomalie confirmée : ${c.c}`:`Faux positif signalé : ${c.c}`);renderView();toast("Votre avis est enregistré dans le journal.")}
+  if(act==="editdec"){S.edit=d.id;S.draft[d.id]={choice:d.decision.choice,text:d.decision.text};renderView()}
+  if(act==="savedec"){
+    const dr=S.draft[d.id]||{choice:"",text:""};const err=$("#derr");
+    if(!dr.choice){err.textContent="Choisissez une décision.";return}
+    if((dr.text||"").trim().length<12){err.textContent="Ajoutez une justification d'au moins 12 caractères.";return}
+    const ch=CHOICES.find(c=>c[0]===dr.choice),todo=anomalies(d),seen=todo.filter(c=>(S.viewed[d.id]||new Set()).has(c.id)).length;
+    d.status=ch[2];d.decision={choice:dr.choice,by:"Salma B.",t:now(),text:dr.text.trim(),seen,total:todo.length};d.upd=now();
+    pushAudit(d.id,"human","Salma B.",`Décision : ${ch[2]} — ${d.decision.text} (sources consultées ${seen}/${todo.length})`);
+    delete S.draft[d.id];S.edit=null;renderView();toast("Décision enregistrée et ajoutée au journal d'audit.");
+  }
+  if(act==="run")runAnalysis();
+  if(act==="verify"){S.verify=verifyChain();renderView()}
+  if(act==="tamper"){
+    if(S.tamper>=0){AUDIT[S.tamper].action=S.orig;S.tamper=-1;S.orig=null}
+    else{S.tamper=Math.min(4,AUDIT.length-1);S.orig=AUDIT[S.tamper].action;AUDIT[S.tamper].action+=" (modifié après coup)"}
+    S.verify=null;renderView();
+  }
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="gsearch"){S.q=t.value;if(S.view!=="list2"){go("dossiers");$("#gsearch").focus()}else refreshRows()}
+  if(t.id==="dtext"){(S.draft[S.id]||(S.draft[S.id]={choice:"",text:""})).text=t.value;$("#derr").textContent=""}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="fstatus"){S.status=t.value;refreshRows()}
+  if(t.id==="fsort"){S.sort=t.value;refreshRows()}
+  if(t.name==="dchoice"){(S.draft[S.id]||(S.draft[S.id]={choice:"",text:""})).choice=t.value;$("#derr").textContent=""}
+  if(t.dataset&&t.dataset.sim){const d=byId(S.id),s=simSet(d);t.checked?s.add(t.dataset.sim):s.delete(t.dataset.sim);renderView()}
+});
+$("#theme").addEventListener("click",()=>{
+  const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme=dark?"light":"dark";$("#theme").innerHTML=ic(dark?"moon":"sun",18);
+});
+$("#bell").addEventListener("click",()=>toast("3 dossiers attendent une décision de l'analyste."));
+window.addEventListener("hashchange",()=>apply(location.hash.slice(1)));
+
+/* ---------- flux en direct ---------- */
+const LIVE=[["Agent Extraction","engagements ESG relevés dans le rapport","info"],["Agent Vérification croisée","écart détecté entre affirmation et preuve","bad"],["Agent Scoring","Trust Score recalculé","good"],["Agent Ingestion","nouvelles pièces classées","info"]];
+setInterval(()=>{
+  S.ticks++;
+  if(S.view==="dash"&&S.ticks%4===0&&$("#feed")){
+    const r=Math.random(),l=LIVE[Math.floor(r*LIVE.length)],d=DOSSIERS[Math.floor(Math.random()*DOSSIERS.length)];
+    const f={t:now(),a:l[0],txt:l[1],d,k:l[2]};FEED.unshift(f);
+    $("#feed").insertAdjacentHTML("afterbegin",feedLi(f,true));while($("#feed").children.length>6)$("#feed").lastElementChild.remove();
+  }
+  if(S.view==="agents")$$("[data-live]").forEach(el=>{const v=+el.dataset.v,k=el.dataset.live[0];const n=k==="n"?v+Math.round(S.ticks*0.6+Math.random()*3):Math.round(v+(Math.random()-.5)*v*.08);el.textContent=k==="n"?n:n+" ms"});
+},1500);
+
+/* ---------- démarrage ---------- */
+seedAll();
+$("#ic-search").innerHTML=ic("search",16);$("#bell").innerHTML=ic("bell",18);
+$("#theme").innerHTML=ic(matchMedia("(prefers-color-scheme: dark)").matches?"sun":"moon",18);
+apply(location.hash.slice(1));
+</script>
+
+</body></html>
